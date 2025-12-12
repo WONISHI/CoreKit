@@ -1,0 +1,12 @@
+{
+  "name": "@corekit/tsconfig",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "exports": {
+    "./base": "./tsconfig.json" 
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

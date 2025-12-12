@@ -1,0 +1,60 @@
+# =========================
+# 📦 依赖与缓存 (Dependencies)
+# =========================
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# 🚀 TurboRepo 缓存 (必填)
+# =========================
+.turbo/
+
+# =========================
+# 🏗️ 构建输出 (Build Outputs)
+# =========================
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+
+# =========================
+# 🔧 IDE & 编辑器 (Editor)
+# =========================
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# =========================
+# 🖥️ 操作系统文件 (OS System)
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =========================
+# 🔒 环境变量 & 密钥 (Secrets)
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# 📝 其他杂项
+# =========================
+*.local
+temp/
+tmp/
