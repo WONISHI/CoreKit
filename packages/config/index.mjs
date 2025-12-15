@@ -14,61 +14,58 @@ export function createConfig(options = {}) {
   const input = options.input || "src/index.ts";
   const dist = "dist";
 
-  // --- 任务 1: 打包 JS (CJS + ESM) ---
+  // 1. 定义默认输出 (CJS + ESM)
+  const defaultOutput = [
+    {
+      file: `${dist}/index.js`,
+      format: "cjs",
+    },
+    {
+      file: `${dist}/index.mjs`,
+      format: "es",
+    },
+  ];
+
+  // 2. 决定最终使用哪个 Output (优先用传入的，否则用默认的)
+  let finalOutput = options.output || defaultOutput;
+
+  // 3. 【关键】强制处理 sourcemap: false
+  // 无论用户传了什么，都统一遍历一遍，把 sourcemap 关掉
+  if (!Array.isArray(finalOutput)) {
+    finalOutput = [finalOutput];
+  }
+  finalOutput = finalOutput.map((item) => ({
+    ...item,
+    sourcemap: false, // 👈 强制覆盖
+  }));
+
   const jsConfig = {
     input,
-    output: [
-      {
-        file: `${dist}/index.js`,
-        format: "cjs",
-        sourcemap: false,
-      },
-      {
-        file: `${dist}/index.mjs`,
-        format: "es",
-        sourcemap: false,
-      },
-    ],
-    // 自动将 package.json 中的依赖排除，防止打包进去
+    output: finalOutput, // 使用处理后的 output
     external: (id) => /node_modules/.test(id),
     plugins: [
       resolve(),
       commonjs(),
       typescript({
         tsconfig: "./tsconfig.json",
-        // 【重点 1】这里必须设为 false！
-        // 因为我们会用下面的 dtsConfig 专门打包类型，
-        // 如果这里是 true，会生成一堆零散的 .d.ts 文件，这就冲突了。
-        declaration: false, 
+        declaration: false,
       }),
       terser({
-        format: {
-          comments: false,
-        },
+        format: { comments: false },
         compress: {
           drop_console: false,
           drop_debugger: true,
-          // 保留你的配置：只移除 log/info/debug，保留 warn/error
-          pure_funcs: ['console.log', 'console.info', 'console.debug'],
+          pure_funcs: ["console.log", "console.info", "console.debug"],
         },
       }),
     ],
   };
 
-  // --- 任务 2: 打包类型 (合并为 index.d.ts) ---
   const dtsConfig = {
     input,
-    output: [
-      {
-        file: `${dist}/index.d.ts`,
-        format: "es",
-      },
-    ],
-    plugins: [
-      dts(), // 【重点 2】使用 dts 插件合并类型
-    ],
+    output: [{ file: `${dist}/index.d.ts`, format: "es" }],
+    plugins: [dts()],
   };
 
-  // 返回数组，Rollup 会依次执行这两个任务
   return [jsConfig, dtsConfig];
 }
