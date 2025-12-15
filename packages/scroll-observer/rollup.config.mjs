@@ -1,7 +1,6 @@
-import { baseConfig } from "@corekit/rollup-config";
+import { createConfig } from "@corekit/rollup-config";
 
-export default {
-  ...baseConfig, // 展开基础配置
+export default createConfig({
   input: "src/index.ts",
   output: [
     { file: "dist/index.js", format: "cjs" },
@@ -17,4 +16,4 @@ export default {
       name: "Watermark",
     },
   ],
-};
+});

@@ -9,8 +9,21 @@
     "build": "rollup -c rollup.config.mjs",
     "dev": "rollup -c rollup.config.mjs -w"
   },
-  "keywords": [],
+  "keywords": [
+    "scroll",
+    "observer",
+    "intersection-observer"
+  ],
   "author": "",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "license": "ISC",
   "devDependencies": {
     "@corekit/rollup-config": "workspace:^",

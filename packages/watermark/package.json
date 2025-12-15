@@ -9,9 +9,22 @@
     "build": "rollup -c rollup.config.mjs",
     "dev": "rollup -c rollup.config.mjs -w"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "watermark",
+    "image"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "author": "WONSHI",
   "license": "ISC",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@corekit/rollup-config": "workspace:^",
     "@corekit/tsconfig": "workspace:^"
