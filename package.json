@@ -9,10 +9,15 @@
     "build": "turbo run build",
     "build-window:64": ".\\node_modules\\turbo-windows-64\\bin\\turbo.exe run build"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "watermark",
+    "scroll-observer",
+    "typescript"
+  ],
+  "author": "WONSHI",
   "license": "ISC",
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "@rollup/plugin-commonjs": "25.0.7",
     "@rollup/plugin-node-resolve": "15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
