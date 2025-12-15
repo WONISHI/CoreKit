@@ -43,19 +43,10 @@ importers:
 
   packages/scroll-observer:
     devDependencies:
-      '@corekit/rollup-config':
+      '@purekit/rollup-config':
         specifier: workspace:^
         version: link:../config
-      '@corekit/tsconfig':
-        specifier: workspace:^
-        version: link:../tsconfig
-
-  packages/scrollObserver.js:
-    devDependencies:
-      '@corekit/rollup-config':
-        specifier: workspace:^
-        version: link:../config
-      '@corekit/tsconfig':
+      '@purekit/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
 
@@ -63,19 +54,10 @@ importers:
 
   packages/watermark:
     devDependencies:
-      '@corekit/rollup-config':
+      '@purekit/rollup-config':
         specifier: workspace:^
         version: link:../config
-      '@corekit/tsconfig':
-        specifier: workspace:^
-        version: link:../tsconfig
-
-  packages/watermark.js:
-    devDependencies:
-      '@corekit/rollup-config':
-        specifier: workspace:^
-        version: link:../config
-      '@corekit/tsconfig':
+      '@purekit/tsconfig':
         specifier: workspace:^
         version: link:../tsconfig
 

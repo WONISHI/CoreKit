@@ -1,6 +1,6 @@
 {
-  "name": "@corekit/watermark",
-  "version": "1.0.0",
+  "name": "@purekit/watermark",
+  "version": "1.0.1",
   "description": "",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -26,7 +26,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@corekit/rollup-config": "workspace:^",
-    "@corekit/tsconfig": "workspace:^"
+    "@purekit/rollup-config": "workspace:^",
+    "@purekit/tsconfig": "workspace:^"
   }
 }

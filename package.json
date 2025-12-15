@@ -1,5 +1,5 @@
 {
-  "name": "corekit",
+  "name": "purekit",
   "version": "0.0.1",
   "description": "core business logic & utilities",
   "main": "index.js",

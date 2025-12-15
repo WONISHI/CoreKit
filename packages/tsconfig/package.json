@@ -1,5 +1,5 @@
 {
-  "name": "@corekit/tsconfig",
+  "name": "@purekit/tsconfig",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

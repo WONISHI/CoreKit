@@ -1,5 +1,5 @@
 {
-  "extends": "@corekit/tsconfig/base", 
+  "extends": "@purekit/tsconfig/base", 
   "compilerOptions": {
     "outDir": "dist"
   },

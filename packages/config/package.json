@@ -1,6 +1,6 @@
 {
-  "name": "@corekit/rollup-config",
-  "version": "1.0.1",
+  "name": "@purekit/rollup-config",
+  "version": "1.0.2",
   "description": "",
   "type": "module",
   "main": "index.mjs",

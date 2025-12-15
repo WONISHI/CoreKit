@@ -1,4 +1,4 @@
-import { createConfig } from "@corekit/rollup-config";
+import { createConfig } from "@purekit/rollup-config";
 
 export default createConfig({
   input: "src/index.ts",

@@ -1,6 +1,6 @@
 {
-  "name": "@corekit/scroll-observer",
-  "version": "1.0.1",
+  "name": "@purekit/scroll-observer",
+  "version": "1.0.2",
   "description": "",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -26,7 +26,7 @@
   ],
   "license": "ISC",
   "devDependencies": {
-    "@corekit/rollup-config": "workspace:^",
-    "@corekit/tsconfig": "workspace:^"
+    "@purekit/rollup-config": "workspace:^",
+    "@purekit/tsconfig": "workspace:^"
   }
 }
