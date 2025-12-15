@@ -1,4 +1,4 @@
-# purekit
+# Purekit
 一个轻量、高性能、零依赖的 TypeScript DOM 工具库。包含 防篡改水印 和 高性能滚动焦点检测 两个核心模块。
 
 ## ✨ 特性 (Features)
