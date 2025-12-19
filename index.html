@@ -5,6 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="./packages/watermark/dist/index.umd.js"></script>
     <title>Document</title>
+    <script type="module">
+      // import watermark from "./packages/watermark/dist/index.mjs";
+
+      // 此时 document.body 还是 null
+      console.log("Current Body:", document.body);
+
+      // 调用 apply
+      const vm = Watermark.apply({
+        text: "Body 还没出来我就执行了\n111",
+        gap: 0,
+        layout: "rb",
+        image: "https://picsum.photos/200/300",
+      });
+
+      const content = [
+        {
+          text: "111",
+          fontSize:'',
+          fontWeight:'',
+          fontFamily:'',
+          fontColor:'',
+          rowGap:10,
+          rotate:10
+        },{
+          image:'',
+          rotate:10,
+          width:10,
+          height:10,
+          objectFit:'',
+          rowGap:10,
+        }
+      ];
+      vm.download();
+      console.log("vm", vm);
+    </script>
+    <script src="https://slow-server.com/very-large-script.js"></script>
+    <script type="module">
+      // 假设这是没有 if (document.readyState...) 判断的代码
+      const container = document.body || document.documentElement;
+      const div = document.createElement("div");
+      // 如果你在 apply 里强制要求 container 必须是 body
+      // 此时 document.body 是 null，逻辑会立即崩掉或挂载到 html 上导致样式错乱
+      container.appendChild(div);
+    </script>
   </head>
   <body>
     <div id="app" style="width: 300px; height: 400px">
@@ -27,8 +71,13 @@
       <button class="trigger-click">nihaonihao</button>
       <button class="trigger-click">nihaonihao</button>
     </div>
-    <script>
-      Watermark.apply("nihaonihao", "#app");
-    </script>
+    <!-- <script>
+      const vm = Watermark.apply({
+        text:`nihaonihao\n111`,
+        el:'#app',
+        layout:'rt'
+      });
+      console.log("vm", vm, Watermark);
+    </script> -->
   </body>
 </html>

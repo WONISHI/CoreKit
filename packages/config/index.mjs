@@ -34,7 +34,7 @@ export function createConfig(options = {}) {
   }
   finalOutput = finalOutput.map((item) => ({
     ...item,
-    sourcemap: false, // 👈 强制覆盖
+    sourcemap: false,
   }));
 
   const jsConfig = {
@@ -48,14 +48,14 @@ export function createConfig(options = {}) {
         tsconfig: "./tsconfig.json",
         declaration: false,
       }),
-      terser({
-        format: { comments: false },
-        compress: {
-          drop_console: false,
-          drop_debugger: true,
-          pure_funcs: ["console.log", "console.info", "console.debug"],
-        },
-      }),
+      // terser({
+      //   format: { comments: false },
+      //   compress: {
+      //     drop_console: false,
+      //     drop_debugger: true,
+      //     pure_funcs: ["console.log", "console.info", "console.debug"],
+      //   },
+      // }),
     ],
   };
 

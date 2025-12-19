@@ -1,350 +1,271 @@
-import type { WatermarkOptions, InternalOptions } from "../types/watermark";
+import type { WatermarkOptions, InternalOptions, WatermarkContentItem } from "../types/watermark";
 
 class Watermark {
-  // 内部配置使用必填类型，避免随处可见的判空逻辑
   private options: InternalOptions;
   private container: HTMLElement | null = null;
   private watermarkDom: HTMLElement | null = null;
   private observer: MutationObserver | null = null;
   private resizeObserver: ResizeObserver | null = null;
-  private _debounceRender: any = null; // 使用 any 兼容 Node/Browser 的 Timer 类型差异
+  private _imgCache = new Map<string, HTMLImageElement>();
 
   constructor() {
-    // 默认配置
     this.options = {
       id: "watermark-layer",
-      text: "侵权必究",
+      content: "内部资料",
       fontSize: 16,
-      gap: 100,
+      fontWeight: "normal",
       fontFamily: "system-ui, -apple-system, sans-serif",
       fontColor: "rgba(0, 0, 0, 0.15)",
       rotate: -20,
       zIndex: 9999,
       monitor: true,
+      layout: "repeat",
+      gap: [100, 100],
+      offset: [20, 20],
     };
   }
 
   // =================================================================
-  // 1. 函数重载定义 (Function Overloads)
+  // 1. 公开 API
   // =================================================================
 
-  /** 方式一：只传入文本 (挂载到 body) */
-  public apply(text: string): this | void;
+  public apply(arg1?: string | WatermarkOptions, arg2?: HTMLElement | string): this {
+    if (document.readyState === "loading" && !document.body) {
+      document.addEventListener("DOMContentLoaded", () => this.apply(arg1, arg2));
+      return this;
+    }
 
-  /** 方式二：传入文本 和 挂载容器 (选择器或元素) */
-  public apply(text: string, el: HTMLElement | string): this | void;
-
-  /** 方式三：传入完整配置对象 */
-  public apply(options?: WatermarkOptions): this | void;
-
-  public apply(
-    arg1?: string | WatermarkOptions,
-    arg2?: HTMLElement | string
-  ): this | void {
-    // --- 参数归一化 (Normalization) ---
-    let options: WatermarkOptions = {};
-
+    let opts: WatermarkOptions = {};
     if (typeof arg1 === "string") {
-      options.text = arg1;
-      if (arg2) {
-        options.el = arg2;
-      }
+      opts.content = arg1;
+      if (arg2) opts.el = arg2;
     } else if (typeof arg1 === "object") {
-      options = arg1;
+      opts = arg1;
     }
 
-    const { el, ...rest } = options;
-
-    Object.keys(rest).forEach((k) => {
-      const key = k as keyof typeof rest;
-      if (rest[key] !== undefined) {
-        (this.options as any)[key] = rest[key];
-      }
-    });
-
-    // 1. 如果用户明确传入了 el，就必须找到它，找不到应该报错（或者警告）
-    if (el) {
-      this.container = typeof el === "string" ? document.querySelector(el) : el;
-      if (!this.container) {
-        console.error(
-          `Watermark: Container "${el}" not found. Please check the selector or ensure the element is rendered.`
-        );
-        return;
-      }
-    }
-
-    // 2. 如果用户压根没传 el，也没找到（且上面没 return），则默认回退到 body
-    if (!this.container) {
-      this.container = document.body;
-    }
-
-    // 3. 最后的防线（防止 body 都不存在的情况，如 head 中执行）
-    if (!this.container) {
-      console.error(
-        "Watermark: Mount element not found (document.body is null)."
-      );
-      return;
-    }
-
-    // 5. 确保容器具有定位上下文 (Containing Block)
-    // 即使外部把 position 设为 static，也能通过其他手段锁住水印
+    this._updateOptions(opts);
+    this.container = this._resolveContainer(opts.el || this.options.el);
+    
+    // 关键：确保容器能撑起 absolute 的水印
     this._ensureContainerPosition();
-
-    // 6. 渲染与启动监听
     this.render();
 
-    if (this.options.monitor) {
-      this.startMonitor();
-    }
-
+    if (this.options.monitor) this.startMonitor();
     this.startResizeObserver();
-
     return this;
   }
 
-  /**
-   * 【核心逻辑】确保父容器能锁住 absolute 的水印
-   * 优先检查是否已有定位，如果没有，使用副作用最小的 contain: paint
-   */
-  private _ensureContainerPosition(): void {
-    // Body 元素天生就是定位基准，不需要处理
-    if (!this.container || this.container === document.body) return;
-
-    const style = window.getComputedStyle(this.container);
-
-    // 1. 如果用户自己设置了定位，很好，直接用
-    if (["relative", "absolute", "fixed", "sticky"].includes(style.position)) {
-      return;
-    }
-
-    // 2. 如果用户设置了 transform 或 contain，这些属性也会创建包含块
-    if (style.transform !== "none") return;
-    // @ts-ignore: contain 属性在部分 TS 版本定义中可能缺失
-    if (style.contain && style.contain !== "none") return;
-
-    // 3. 如果以上都没有，为了防止水印“飞”出去，我们施加最小干预
-    // 使用 contain: paint; 它会让元素成为 containing block，但不会像 position: relative 那样改变布局流
-    this.container.style.cssText += "; contain: paint;";
+  public update(options: Partial<WatermarkOptions>) {
+    this._updateOptions(options);
+    this.render();
   }
 
-  /**
-   * 生成水印 Canvas Base64
-   */
-  createBase64(): { base64: string; size: number } {
-    const { text, fontSize, fontFamily, fontColor, rotate, gap } = this.options;
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const ratio = window.devicePixelRatio || 1;
-
-    if (!ctx) {
-      throw new Error("Watermark: Canvas context creation failed.");
-    }
-
-    ctx.font = `${fontSize * ratio}px ${fontFamily}`;
-    const textWidth = ctx.measureText(text).width;
-    const canvasSize = Math.max(textWidth, 100) + gap * ratio;
-
-    canvas.width = canvasSize;
-    canvas.height = canvasSize;
-
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((Math.PI / 180) * rotate);
-
-    ctx.font = `${fontSize * ratio}px ${fontFamily}`;
-    ctx.fillStyle = fontColor;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, 0, 0);
-
-    return {
-      base64: canvas.toDataURL(),
-      size: canvasSize / ratio,
-    };
+  // 暴露 Base64 方法
+  public async getBase64() {
+    const { base64 } = await this.getWatermarkData();
+    return base64;
   }
 
-  render(): void {
-    const { base64, size } = this.createBase64();
-    const { id, zIndex } = this.options;
+  // =================================================================
+  // 2. 核心布局引擎 (getWatermarkData)
+  // =================================================================
 
-    // 渲染前暂停监听，防止自己触发自己
-    this.stopMonitor();
+  /** 核心方法：测量与绘制内容流 */
+  private async _processLayout(ctx: CanvasRenderingContext2D, ratio: number, isDrawing: boolean = false) {
+    const items: WatermarkContentItem[] = typeof this.options.content === "string" 
+      ? [{ text: this.options.content, rowGap: 0 }] 
+      : this.options.content;
 
-    if (!this.container) return;
+    let totalW = 0, totalH = 0, currentLineW = 0, currentLineH = 0;
+    let cursorX = 0, cursorY = 0;
 
-    // 清理旧水印
-    const existing = this.container.querySelector(`#${id}`);
-    if (existing) {
-      this.container.removeChild(existing);
-    }
+    for (const item of items) {
+      let itemW = 0, itemH = 0;
 
-    // 创建新水印 DOM
-    this.watermarkDom = document.createElement("div");
-    this.watermarkDom.id = id;
+      if ("text" in item) {
+        const fSize = (item.fontSize || this.options.fontSize) * ratio;
+        ctx.font = `${item.fontWeight || this.options.fontWeight} ${fSize}px ${item.fontFamily || this.options.fontFamily}`;
+        const lines = item.text.split("\n");
+        let maxL = 0;
+        lines.forEach(l => (maxL = Math.max(maxL, ctx.measureText(l).width)));
+        itemW = maxL;
+        itemH = lines.length * fSize * 1.2;
 
-    const style: Partial<CSSStyleDeclaration> = {
-      position: "absolute", // 依赖 _ensureContainerPosition 提供的基准
-      top: "0",
-      left: "0",
-      width: "100%",
-      height: "100%",
-      pointerEvents: "none",
-      zIndex: zIndex.toString(),
-      backgroundImage: `url(${base64})`,
-      backgroundSize: `${size}px ${size}px`,
-      backgroundRepeat: "repeat",
-      inset: "0",
-    };
-
-    Object.assign(this.watermarkDom.style, style);
-    this.container.appendChild(this.watermarkDom);
-
-    // 恢复监听
-    if (this.options.monitor) {
-      this.startMonitor();
-    }
-  }
-
-  startMonitor() {
-    if (this.observer || !this.container) return;
-
-    this.observer = new MutationObserver((mutations) => {
-      let needRender = false;
-      let containerStyleChanged = false;
-
-      mutations.forEach((mutation) => {
-        // 1. 监听水印是否被删除
-        if (mutation.type === "childList") {
-          mutation.removedNodes.forEach((node) => {
-            if (node === this.watermarkDom) {
-              needRender = true;
-            }
+        if (isDrawing) {
+          ctx.save();
+          ctx.fillStyle = item.fontColor || this.options.fontColor;
+          ctx.translate(cursorX + itemW / 2, cursorY + itemH / 2);
+          if (item.rotate) ctx.rotate((item.rotate * Math.PI) / 180);
+          lines.forEach((l, i) => {
+            const y = (i - (lines.length - 1) / 2) * (fSize * 1.2);
+            ctx.fillText(l, 0, y);
           });
+          ctx.restore();
         }
-
-        // 2. 监听水印属性是否被篡改
-        if (
-          mutation.type === "attributes" &&
-          mutation.target === this.watermarkDom
-        ) {
-          needRender = true;
+      } else if ("image" in item) {
+        const img = await this._loadImage(item.image);
+        itemW = (item.width || 50) * ratio;
+        itemH = (item.height || 50) * ratio;
+        if (isDrawing) {
+          ctx.save();
+          ctx.translate(cursorX + itemW / 2, cursorY + itemH / 2);
+          if (item.rotate) ctx.rotate((item.rotate * Math.PI) / 180);
+          ctx.drawImage(img, -itemW / 2, -itemH / 2, itemW, itemH);
+          ctx.restore();
         }
-
-        // 3. 【自我防御】监听父容器样式变化
-        // 如果外部修改了父容器的 position/transform，我们需要重新检查
-        if (
-          mutation.type === "attributes" &&
-          mutation.target === this.container
-        ) {
-          containerStyleChanged = true;
-        }
-      });
-
-      // 如果父容器样式变了，立即检查并补救定位基准
-      if (containerStyleChanged) {
-        this._ensureContainerPosition();
       }
 
-      if (needRender) {
-        if (this._debounceRender) clearTimeout(this._debounceRender);
-        this._debounceRender = setTimeout(() => {
-          this.render();
-        }, 100);
+      const rGap = (item.rowGap ?? 0) * ratio;
+      // 换行逻辑判断：rGap > 0 或者是最后一个元素
+      if (rGap > 0 || items.indexOf(item) === items.length - 1) {
+        currentLineW = Math.max(currentLineW, cursorX + itemW);
+        currentLineH = Math.max(currentLineH, itemH);
+        totalW = Math.max(totalW, currentLineW);
+        const lineFullH = currentLineH;
+        totalH += lineFullH;
+
+        if (isDrawing) {
+          cursorX = 0;
+          cursorY = totalH + rGap;
+        }
+        if (items.indexOf(item) !== items.length - 1) totalH += rGap;
+      } else {
+        // 水平排列
+        currentLineW = cursorX + itemW;
+        currentLineH = Math.max(currentLineH, itemH);
+        if (isDrawing) cursorX += itemW + (10 * ratio); // 默认微小字符间距
       }
-    });
-
-    this.observer.observe(this.container, {
-      childList: true,
-      attributes: true,
-      subtree: true, // 必须为 true 才能监听到子节点移除
-      attributeFilter: ["style", "class", "hidden"], // 关注这些属性
-    });
-  }
-
-  stopMonitor() {
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
     }
+    return { w: totalW, h: totalH };
   }
 
-  startResizeObserver() {
-    if (this.resizeObserver || !this.container) return;
+  /** 获取水印 Canvas 数据 */
+  public async getWatermarkData(): Promise<{ base64: string; size: [number, number] }> {
+    const ratio = window.devicePixelRatio || 1;
+    const tempCanvas = document.createElement("canvas");
+    const contentSize = await this._processLayout(tempCanvas.getContext("2d")!, ratio, false);
 
-    this.resizeObserver = new ResizeObserver(() => {
-      // 只有当水印节点丢失时才重绘，单纯的大小变化通常由 CSS 自动适应
-      if (
-        this.container &&
-        !this.container.querySelector(`#${this.options.id}`)
-      ) {
-        this.render();
-      }
-    });
+    const { rotate, gap, layout } = this.options;
+    const isRepeat = layout === "repeat";
+    const [gx, gy] = gap as [number, number];
+    const angle = (rotate * Math.PI) / 180;
 
-    this.resizeObserver.observe(this.container);
+    // 计算旋转后的画布宽高 (Bounding Box)
+    const canvasW = (Math.abs(Math.cos(angle) * contentSize.w) + Math.abs(Math.sin(angle) * contentSize.h)) + (isRepeat ? gx * ratio : 0);
+    const canvasH = (Math.abs(Math.sin(angle) * contentSize.w) + Math.abs(Math.cos(angle) * contentSize.h)) + (isRepeat ? gy * ratio : 0);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = canvasW; canvas.height = canvasH;
+    const ctx = canvas.getContext("2d")!;
+
+    ctx.translate(canvasW / 2, canvasH / 2);
+    ctx.rotate(angle);
+    ctx.textAlign = "center"; 
+    ctx.textBaseline = "middle";
+    ctx.translate(-contentSize.w / 2, -contentSize.h / 2); // 居中内容起始点
+    await this._processLayout(ctx, ratio, true);
+
+    return { base64: canvas.toDataURL(), size: [canvasW / ratio, canvasH / ratio] };
   }
 
-  downloadImage(fileName = "watermark.png") {
-    const { base64 } = this.createBase64();
-    const link = document.createElement("a");
-    link.href = base64;
-    link.download = fileName;
-    link.click();
-  }
-
-  destroy() {
+  /** 渲染方法：确保 100% 覆盖容器 */
+  public async render() {
+    if (!this.container) return;
     this.stopMonitor();
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-      this.resizeObserver = null;
+
+    const { base64, size } = await this.getWatermarkData();
+    const { id, zIndex, layout, offset } = this.options;
+
+    let el = this.container.querySelector(`#${id}`) as HTMLElement;
+    console.log(this.container)
+    if (!el) {
+      el = document.createElement("div");
+      el.id = id;
+      // 关键：确保水印 DOM 铺满 el 且不响应鼠标
+      el.style.cssText = `
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: ${zIndex};
+        display: block;
+      `;
+      this.container.appendChild(el);
+      this.watermarkDom = el;
     }
-    if (
-      this.watermarkDom &&
-      this.container &&
-      this.container.contains(this.watermarkDom)
-    ) {
-      this.container.removeChild(this.watermarkDom);
+
+    const [ox, oy] = offset as [number, number];
+    const posMap: any = {
+      lt: `${ox}px ${oy}px`,
+      rt: `calc(100% - ${ox}px) ${oy}px`,
+      lb: `${ox}px calc(100% - ${oy}px)`,
+      rb: `calc(100% - ${ox}px) calc(100% - ${oy}px)`,
+      center: "center"
+    };
+
+    const isRepeat = layout === "repeat";
+    Object.assign(el.style, {
+      backgroundImage: `url(${base64})`,
+      backgroundSize: `${size[0]}px ${size[1]}px`,
+      backgroundRepeat: isRepeat ? "repeat" : "no-repeat",
+      backgroundPosition: isRepeat ? "0 0" : posMap[layout] || "center"
+    });
+
+    if (this.options.monitor) this.startMonitor();
+  }
+
+  // =================================================================
+  // 3. 辅助功能 (容器检查、图片加载、监控)
+  // =================================================================
+
+  private _updateOptions(opts: Partial<WatermarkOptions>) {
+    Object.assign(this.options, opts);
+    if (opts.gap !== undefined) this.options.gap = Array.isArray(opts.gap) ? opts.gap : [opts.gap, opts.gap];
+    if (opts.offset !== undefined) this.options.offset = Array.isArray(opts.offset) ? opts.offset : [opts.offset, opts.offset];
+  }
+
+  private _resolveContainer(el?: string | HTMLElement): HTMLElement {
+    const target = typeof el === "string" ? document.querySelector(el) : el;
+    return (target || document.body || document.documentElement) as HTMLElement;
+  }
+
+  /** 强制容器成为定位基准 */
+  private _ensureContainerPosition() {
+    if (!this.container || this.container === document.body || this.container === document.documentElement) return;
+    const style = window.getComputedStyle(this.container);
+    // 如果是 static，为了覆盖 el，必须改为 relative 或使用 contain
+    if (style.position === "static") {
+      this.container.style.position = "relative";
     }
-    this.watermarkDom = null;
-    // 不建议在 destroy 时重置父容器的 contain 属性，因为可能是用户自己加上去的
+  }
+
+  private _loadImage(src: string): Promise<HTMLImageElement> {
+    if (this._imgCache.has(src)) return Promise.resolve(this._imgCache.get(src)!);
+    return new Promise((res, rej) => {
+      const img = new Image(); img.crossOrigin = "anonymous";
+      img.onload = () => { this._imgCache.set(src, img); res(img); };
+      img.onerror = rej; img.src = src;
+    });
+  }
+
+  public startMonitor() {
+    this.stopMonitor();
+    this.observer = new MutationObserver((ms) => {
+      let reload = ms.some(m => (m.type === 'childList' && Array.from(m.removedNodes).includes(this.watermarkDom!)) || (m.target === this.watermarkDom));
+      if (reload) this.render();
+    });
+    this.observer.observe(this.container!, { childList: true, attributes: true, subtree: true });
+  }
+
+  public stopMonitor() { this.observer?.disconnect(); this.observer = null; }
+
+  private startResizeObserver() {
+    this.resizeObserver = new ResizeObserver(() => {
+      // 检查水印是否还在，不在则重绘
+      if (!this.container?.querySelector(`#${this.options.id}`)) this.render();
+    });
+    this.resizeObserver.observe(this.container!);
   }
 }
 
-// =================================================================
-// 3. 导出接口与单例 (Export)
-// =================================================================
-
-interface WatermarkExport {
-  /** 方式一：只传入文本 */
-  apply(text: string): void | Watermark;
-
-  /** 方式二：传入文本 和 挂载容器 */
-  apply(text: string, el: HTMLElement | string): void | Watermark;
-
-  /** 方式三：传入完整配置对象 */
-  apply(options?: WatermarkOptions): void | Watermark;
-
-  remove: () => void;
-  getInstance: () => Watermark;
-}
-
-let instance: Watermark | null = null;
-
-const watermarkInstance: WatermarkExport = {
-  apply: (...args: any[]) => {
-    if (!instance) {
-      instance = new Watermark();
-    }
-    // @ts-ignore: Spread arguments forwarding
-    return instance.apply(...args);
-  },
-  remove: () => {
-    if (instance) instance.destroy();
-  },
-  getInstance: () => {
-    if (!instance) instance = new Watermark();
-    return instance;
-  },
-};
-
-export default watermarkInstance;
-export type { WatermarkOptions };
+export default new Watermark();
