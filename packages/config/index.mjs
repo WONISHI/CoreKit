@@ -1,7 +1,7 @@
 import typescript from "@rollup/plugin-typescript";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
-import terser from '@rollup/plugin-terser';
+import terser from "@rollup/plugin-terser";
 import dts from "rollup-plugin-dts";
 
 /**
@@ -9,6 +9,7 @@ import dts from "rollup-plugin-dts";
  * @param {Object} options 自定义选项
  * @param {string} options.input 入口文件，默认为 "src/index.ts"
  */
+
 export function createConfig(options = {}) {
   const input = options.input || "src/index.ts";
   const dist = "dist";
@@ -48,14 +49,16 @@ export function createConfig(options = {}) {
         tsconfig: "./tsconfig.json",
         declaration: false,
       }),
-      // terser({
-      //   format: { comments: false },
-      //   compress: {
-      //     drop_console: false,
-      //     drop_debugger: true,
-      //     pure_funcs: ["console.log", "console.info", "console.debug"],
-      //   },
-      // }),
+      /build/.test(process.env.npm_lifecycle_event || "")
+        ? terser({
+            format: { comments: false },
+            compress: {
+              drop_console: false,
+              drop_debugger: true,
+              pure_funcs: ["console.log", "console.info", "console.debug"],
+            },
+          })
+        : null,
     ],
   };
 

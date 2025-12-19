@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "build-window:64": ".\\node_modules\\turbo-windows-64\\bin\\turbo.exe run build"
+    "build-window:64": ".\\node_modules\\turbo-windows-64\\bin\\turbo.exe run build",
+    "prepare": "husky install",
+    "commit": "cz"
   },
   "keywords": [
     "watermark",
@@ -18,10 +20,13 @@
   "license": "ISC",
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
     "@rollup/plugin-commonjs": "25.0.7",
     "@rollup/plugin-node-resolve": "15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "11.1.6",
+    "husky": "^9.1.7",
     "rollup": "3.29.4",
     "rollup-plugin-dts": "^6.3.0",
     "tslib": "^2.8.1",
