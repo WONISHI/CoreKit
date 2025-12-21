@@ -12,13 +12,41 @@
       console.log("Current Body:", document.body);
 
       // 调用 apply
-      const vm = Watermark.apply({
-        text: "Body 还没出来我就执行了\n111",
-        gap: 0,
-        layout: "rb",
-        image: "https://picsum.photos/200/300",
-      });
-
+      // const vm = Watermark.apply({
+      //     content: {
+      //         type: 'group',
+      //         layout: 'row',       // 顶层：水平布局 (对应截图 layout:'水平方向')
+      //         gap: 15,             // 对应截图 layoutGap
+      //         items: [
+      //             // 左侧图片
+      //             {
+      //                 type: 'image',
+      //                 image: 'https://picsum.photos/40/40'
+      //             },
+      //             // 右侧文字组 (自动处理换行)
+      //             {
+      //                 type: 'group',
+      //                 layout: 'column', // 内部：竖直布局 (或者直接传带 \n 的 text 也会自动变这个)
+      //                 gap: 15,
+      //                 items: [
+      //                     {
+      //                         type: 'text',
+      //                         text: '内部绝密资料',
+      //                         fontSize: 16,
+      //                         fontColor: 'red'
+      //                     },
+      //                     {
+      //                         type: 'text',
+      //                         text: '严禁外传\n2023-10-01', // 这里会自动再次拆分为两行
+      //                         fontSize: 12,
+      //                         fontColor: '#999'
+      //                     }
+      //                 ]
+      //             }
+      //         ]
+      //     }
+      // });
+      Watermark.apply(['111','222'])
       const content = [
         {
           text: "111",
@@ -37,8 +65,8 @@
           rowGap:10,
         }
       ];
-      vm.download();
-      console.log("vm", vm);
+      // vm.download();
+      // console.log("vm", vm);
     </script>
     <script src="https://slow-server.com/very-large-script.js"></script>
     <script type="module">
