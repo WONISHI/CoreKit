@@ -1,18 +1,15 @@
-import type { MeasuredNode, MeasuredGroup, WatermarkOptions } from '../../types';
+import type { MeasuredNode, MeasuredGroup, WatermarkOptions, WatermarkCanvasDrawerRusult } from '../../types';
 import { imageLoader } from '../utils/image-loader';
 
 export class CanvasDrawer {
-  static async generate(
-    layoutTree: MeasuredNode,
-    options: WatermarkOptions,
-    ratio: number,
-  ): Promise<{ base64: string; size: [number, number] }> {
+  static async generate(layoutTree: MeasuredNode, options: WatermarkOptions, ratio: number): Promise<WatermarkCanvasDrawerRusult> {
     const { rotate, gap, layout } = options;
     // @ts-ignore
     const [gx, gy] = (Array.isArray(gap) ? gap : [gap, gap] || [100, 100]).map((n) => n * ratio);
 
     const contentW = layoutTree._renderWidth;
     const contentH = layoutTree._renderHeight;
+    // 弧度 = 角度 × (π / 180)
     const angle = ((rotate || -20) * Math.PI) / 180;
 
     const canvasW = Math.abs(Math.cos(angle) * contentW) + Math.abs(Math.sin(angle) * contentH) + (layout === 'repeat' ? gx : 0);
