@@ -106,7 +106,6 @@ class Watermark {
   private _normalizeText(text: string, style?: Partial<WatermarkText>): WatermarkContent {
     // 替换 <br/> 为 \n
     const rawText = text.replace(/<br\/?>/g, '\n');
-    console.log('text', text, style, rawText);
     if (!rawText.includes('\n')) {
       return { type: 'text', text: rawText, ...style };
     }
@@ -261,22 +260,23 @@ class Watermark {
       opts = arg1;
     }
 
-    // 把opts设置到this.options上面去
     this._updateOptions(opts);
-    // 获取覆盖的元素
     this.container = this._resolveContainer(opts.el || this.options.el);
-
-    // 关键：确保容器能撑起 absolute 的水印
     this._ensureContainerPosition();
+
+    // 只调用 render 即可。render 内部会在绘制完成后自己启动 monitor
     this.render();
 
-    if (this.options.monitor) this.startMonitor();
-    this.startResizeObserver();
+    // ❌ 删除下面这两行，避免在 render 完成前就启动监听
+    // if (this.options.monitor) this.startMonitor();
+    // this.startResizeObserver();
+
     return this;
   }
 
   /** 渲染方法：确保 100% 覆盖容器 */
   public async render() {
+    console.log(this.container);
     if (!this.container) return;
     this.stopMonitor();
 
