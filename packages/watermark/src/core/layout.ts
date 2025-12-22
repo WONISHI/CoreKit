@@ -42,17 +42,27 @@ export class LayoutEngine {
         text: line,
         ...style,
       })),
-    } as any; // 简单处理类型
+    } as any;
   }
 
   /** 3. 测量尺寸 */
   static measure(ctx: CanvasRenderingContext2D, node: WatermarkContent, globalOptions: WatermarkOptions, ratio: number): MeasuredNode {
     if (node.type === 'text') {
       const fontSize = (node.fontSize || globalOptions.fontSize || 16) * ratio;
+      /**
+       * ctx.font 的几种组合
+       * 1. 字号 字体
+       * 2. 加粗 + 字号 + 字体   ctx.font = 'bold 20px Arial'; √
+       * 3. 斜体 + 字号 + 字体   ctx.font = 'italic 20px Arial';
+       * 4. 变体 + 字号 + 字体   ctx.font = 'small-caps 20px Arial';
+       * 5. 加粗 + 斜体 + 字号 + 字体  ctx.font = 'bold italic 20px Arial'; 或者 italic bold 20px Arial
+       * 6. 斜体 + 变体 + 加粗 + 字号 + 字体
+       */
       const font = `${node.fontWeight || globalOptions.fontWeight || 'normal'} ${fontSize}px ${
         node.fontFamily || globalOptions.fontFamily || 'sans-serif'
       }`;
       ctx.font = font;
+      // 获取文字的宽度
       const metrics = ctx.measureText(node.text);
       return {
         ...node,

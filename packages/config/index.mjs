@@ -3,6 +3,8 @@ import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import terser from "@rollup/plugin-terser";
 import dts from "rollup-plugin-dts";
+import alias from "@rollup/plugin-alias";
+import path from "path";
 
 /**
  * 创建 Rollup 配置
@@ -13,6 +15,9 @@ import dts from "rollup-plugin-dts";
 export function createConfig(options = {}) {
   const input = options.input || "src/index.ts";
   const dist = "dist";
+
+  // 2. 获取当前执行构建的项目根目录
+  const projectRoot = process.cwd();
 
   // 1. 定义默认输出 (CJS + ESM)
   const defaultOutput = [
@@ -43,6 +48,14 @@ export function createConfig(options = {}) {
     output: finalOutput, // 使用处理后的 output
     external: (id) => /node_modules/.test(id),
     plugins: [
+      alias({
+        entries: [
+          {
+            find: "@",
+            replacement: path.resolve(projectRoot, "src"),
+          },
+        ],
+      }),
       resolve(),
       commonjs(),
       typescript({
