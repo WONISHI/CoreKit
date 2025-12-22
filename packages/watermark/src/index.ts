@@ -1,23 +1,17 @@
-import type {
-  WatermarkOptions,
-  WatermarkContent,
-  WatermarkGroup,
-  WatermarkText,
-  WatermarkImage,
-} from "../types/watermark";
+import type { WatermarkOptions, WatermarkContent, WatermarkGroup, WatermarkText, WatermarkImage } from '../types/watermark';
 
 class Watermark {
   private options: any = {
-    id: "watermark-layer",
-    content: "内部资料",
+    id: 'watermark-layer',
+    content: '内部资料',
     fontSize: 16,
-    fontWeight: "normal",
-    fontFamily: "system-ui, -apple-system, sans-serif",
-    fontColor: "rgba(0, 0, 0, 0.15)",
+    fontWeight: 'normal',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    fontColor: 'rgba(0, 0, 0, 0.15)',
     rotate: -20,
     zIndex: 9999,
     monitor: true,
-    layout: "repeat",
+    layout: 'repeat',
     gap: [100, 100],
     offset: [20, 20],
   };
@@ -45,14 +39,12 @@ class Watermark {
 
     // 3. 测量阶段：递归计算整个布局树的宽高
     // 创建一个临时 ctx 用于测量文本
-    const tempCtx = document.createElement("canvas").getContext("2d")!;
+    const tempCtx = document.createElement('canvas').getContext('2d')!;
     const layoutTree = this._measureLayout(tempCtx, rootContent, ratio);
 
     // 4. 画布准备
     const { rotate, gap, layout } = this.options;
-    const [gx, gy] = (Array.isArray(gap) ? gap : [gap, gap]).map(
-      (n: number) => n * ratio
-    );
+    const [gx, gy] = (Array.isArray(gap) ? gap : [gap, gap]).map((n: number) => n * ratio);
 
     // ❌ 错误代码：Group 类型没有 width/height 属性，应该是 _renderWidth
     // const contentW = layoutTree.width;
@@ -63,19 +55,13 @@ class Watermark {
     const contentH = layoutTree._renderHeight;
     const angle = (rotate * Math.PI) / 180;
 
-    const canvasW =
-      Math.abs(Math.cos(angle) * contentW) +
-      Math.abs(Math.sin(angle) * contentH) +
-      (layout === "repeat" ? gx : 0);
-    const canvasH =
-      Math.abs(Math.sin(angle) * contentW) +
-      Math.abs(Math.cos(angle) * contentH) +
-      (layout === "repeat" ? gy : 0);
+    const canvasW = Math.abs(Math.cos(angle) * contentW) + Math.abs(Math.sin(angle) * contentH) + (layout === 'repeat' ? gx : 0);
+    const canvasH = Math.abs(Math.sin(angle) * contentW) + Math.abs(Math.cos(angle) * contentH) + (layout === 'repeat' ? gy : 0);
 
-    const canvas = document.createElement("canvas");
+    const canvas = document.createElement('canvas');
     canvas.width = canvasW;
     canvas.height = canvasH;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext('2d')!;
 
     // 5. 绘制阶段
     ctx.translate(canvasW / 2, canvasH / 2);
@@ -96,18 +82,16 @@ class Watermark {
   // =================================================================
 
   /** 将用户输入归一化为标准的 WatermarkContent 树 */
-  private _normalizeContent(
-    content: string | WatermarkContent
-  ): WatermarkContent {
+  private _normalizeContent(content: string | WatermarkContent): WatermarkContent {
     // 情况 1: 纯字符串 -> 转为 Text 节点 (并在内部处理 \n)
-    if (typeof content === "string") {
+    if (typeof content === 'string') {
       return this._normalizeText(content);
     }
 
     // 情况 2: 已是对象
-    if (content.type === "text") {
+    if (content.type === 'text') {
       return this._normalizeText(content.text, content);
-    } else if (content.type === "group") {
+    } else if (content.type === 'group') {
       // 递归处理子元素
       return {
         ...content,
@@ -119,25 +103,22 @@ class Watermark {
   }
 
   /** 处理文本中的换行符，将其转换为 Vertical Group */
-  private _normalizeText(
-    text: string,
-    style?: Partial<WatermarkText>
-  ): WatermarkContent {
+  private _normalizeText(text: string, style?: Partial<WatermarkText>): WatermarkContent {
     // 替换 <br/> 为 \n
-    const rawText = text.replace(/<br\/?>/g, "\n");
-    console.log("text", text, style, rawText);
-    if (!rawText.includes("\n")) {
-      return { type: "text", text: rawText, ...style };
+    const rawText = text.replace(/<br\/?>/g, '\n');
+    console.log('text', text, style, rawText);
+    if (!rawText.includes('\n')) {
+      return { type: 'text', text: rawText, ...style };
     }
 
     // 如果包含换行，拆分为 Group (layout: column)
-    const lines = rawText.split("\n");
+    const lines = rawText.split('\n');
     return {
-      type: "group",
-      layout: "column",
+      type: 'group',
+      layout: 'column',
       gap: 4, // 默认行间距
       items: lines.map((line) => ({
-        type: "text",
+        type: 'text',
         text: line,
         ...style, // 继承父级样式
       })),
@@ -149,9 +130,9 @@ class Watermark {
   // =================================================================
 
   private async _preloadImages(node: WatermarkContent) {
-    if (node.type === "image") {
+    if (node.type === 'image') {
       await this._loadImage(node.image);
-    } else if (node.type === "group") {
+    } else if (node.type === 'group') {
       await Promise.all(node.items.map((item) => this._preloadImages(item)));
     }
   }
@@ -161,18 +142,12 @@ class Watermark {
   // =================================================================
 
   /** 返回计算好尺寸和偏移量的布局树 */
-  private _measureLayout(
-    ctx: CanvasRenderingContext2D,
-    node: WatermarkContent,
-    ratio: number
-  ): MeasuredNode {
+  private _measureLayout(ctx: CanvasRenderingContext2D, node: WatermarkContent, ratio: number): MeasuredNode {
     const baseStyle = this.options; // 全局默认样式
 
-    if (node.type === "text") {
+    if (node.type === 'text') {
       const fontSize = (node.fontSize || baseStyle.fontSize) * ratio;
-      const font = `${node.fontWeight || baseStyle.fontWeight} ${fontSize}px ${
-        node.fontFamily || baseStyle.fontFamily
-      }`;
+      const font = `${node.fontWeight || baseStyle.fontWeight} ${fontSize}px ${node.fontFamily || baseStyle.fontFamily}`;
       ctx.font = font;
       const metrics = ctx.measureText(node.text);
 
@@ -183,32 +158,26 @@ class Watermark {
         _font: font,
         _color: node.fontColor || baseStyle.fontColor,
       };
-    } else if (node.type === "image") {
+    } else if (node.type === 'image') {
       return {
         ...node,
         _renderWidth: (node.width || 50) * ratio,
         _renderHeight: (node.height || 50) * ratio,
       };
-    } else if (node.type === "group") {
-      const measuredItems = node.items.map((item) =>
-        this._measureLayout(ctx, item, ratio)
-      );
+    } else if (node.type === 'group') {
+      const measuredItems = node.items.map((item) => this._measureLayout(ctx, item, ratio));
       const gap = (node.gap || 0) * ratio;
       let totalW = 0,
         totalH = 0;
 
-      if (node.layout === "row") {
+      if (node.layout === 'row') {
         // 水平布局: 宽累加，高取最大
-        totalW =
-          measuredItems.reduce((acc, item) => acc + item._renderWidth, 0) +
-          (measuredItems.length - 1) * gap;
+        totalW = measuredItems.reduce((acc, item) => acc + item._renderWidth, 0) + (measuredItems.length - 1) * gap;
         totalH = Math.max(...measuredItems.map((i) => i._renderHeight));
       } else {
         // 垂直布局: 宽取最大，高累加
         totalW = Math.max(...measuredItems.map((i) => i._renderWidth));
-        totalH =
-          measuredItems.reduce((acc, item) => acc + item._renderHeight, 0) +
-          (measuredItems.length - 1) * gap;
+        totalH = measuredItems.reduce((acc, item) => acc + item._renderHeight, 0) + (measuredItems.length - 1) * gap;
       }
 
       return {
@@ -227,12 +196,7 @@ class Watermark {
   // 辅助逻辑 4: 递归绘制 (Draw)
   // =================================================================
 
-  private _drawLayout(
-    ctx: CanvasRenderingContext2D,
-    node: MeasuredNode | MeasuredGroup,
-    x: number = 0,
-    y: number = 0
-  ) {
+  private _drawLayout(ctx: CanvasRenderingContext2D, node: MeasuredNode | MeasuredGroup, x: number = 0, y: number = 0) {
     ctx.save();
 
     // 1. 处理局部旋转 (以元素中心为支点)
@@ -244,24 +208,20 @@ class Watermark {
       ctx.translate(-centerX, -centerY);
     }
 
-    if (node.type === "text") {
+    if (node.type === 'text') {
       ctx.font = node._font!;
       ctx.fillStyle = node._color!;
-      ctx.textBaseline = "top"; // 统一基线
-      ctx.fillText(
-        node.text,
-        x,
-        y + (node._renderHeight - parseInt(ctx.font)) / 2 + 2
-      ); // 微调垂直居中
-    } else if (node.type === "image") {
+      ctx.textBaseline = 'top'; // 统一基线
+      ctx.fillText(node.text, x, y + (node._renderHeight - parseInt(ctx.font)) / 2 + 2); // 微调垂直居中
+    } else if (node.type === 'image') {
       const img = this._imgCache.get(node.image);
       if (img) {
         ctx.drawImage(img, x, y, node._renderWidth, node._renderHeight);
       }
-    } else if (node.type === "group") {
+    } else if (node.type === 'group') {
       let currentX = x;
       let currentY = y;
-      const isRow = node.layout === "row";
+      const isRow = node.layout === 'row';
 
       (node as MeasuredGroup).items.forEach((item) => {
         // 居中对齐逻辑 (在当前行/列中居中)
@@ -279,8 +239,7 @@ class Watermark {
         this._drawLayout(ctx, item, itemX, itemY);
 
         // 更新游标
-        if (isRow)
-          currentX += item._renderWidth + (node as MeasuredGroup)._gap!;
+        if (isRow) currentX += item._renderWidth + (node as MeasuredGroup)._gap!;
         else currentY += item._renderHeight + (node as MeasuredGroup)._gap!;
       });
     }
@@ -288,22 +247,17 @@ class Watermark {
     ctx.restore();
   }
 
-  public apply(
-    arg1?: string | WatermarkOptions,
-    arg2?: HTMLElement | string
-  ): this {
-    if (document.readyState === "loading" && !document.body) {
-      document.addEventListener("DOMContentLoaded", () =>
-        this.apply(arg1, arg2)
-      );
+  public apply(arg1?: string | WatermarkOptions, arg2?: HTMLElement | string): this {
+    if (document.readyState === 'loading' && !document.body) {
+      document.addEventListener('DOMContentLoaded', () => this.apply(arg1, arg2));
       return this;
     }
 
     let opts: WatermarkOptions = {};
-    if (typeof arg1 === "string") {
+    if (typeof arg1 === 'string') {
       opts.content = arg1;
       if (arg2) opts.el = arg2;
-    } else if (typeof arg1 === "object") {
+    } else if (typeof arg1 === 'object') {
       opts = arg1;
     }
 
@@ -332,7 +286,7 @@ class Watermark {
     let el = this.container.querySelector(`#${id}`) as HTMLElement;
 
     if (!el) {
-      el = document.createElement("div");
+      el = document.createElement('div');
       el.id = id;
       // 关键：确保水印 DOM 铺满 el 且不响应鼠标
       el.style.cssText = `
@@ -353,27 +307,26 @@ class Watermark {
       rt: `calc(100% - ${ox}px) ${oy}px`,
       lb: `${ox}px calc(100% - ${oy}px)`,
       rb: `calc(100% - ${ox}px) calc(100% - ${oy}px)`,
-      center: "center",
+      center: 'center',
     };
 
-    const isRepeat = layout === "repeat";
+    const isRepeat = layout === 'repeat';
 
     Object.assign(el.style, {
       backgroundImage: `url(${base64})`,
       backgroundSize: `${size[0]}px ${size[1]}px`,
-      backgroundRepeat: isRepeat ? "repeat" : "no-repeat",
-      backgroundPosition: isRepeat ? "0 0" : posMap[layout] || "center",
+      backgroundRepeat: isRepeat ? 'repeat' : 'no-repeat',
+      backgroundPosition: isRepeat ? '0 0' : posMap[layout] || 'center',
     });
 
     if (this.options.monitor) this.startMonitor();
   }
 
   private _loadImage(src: string): Promise<HTMLImageElement> {
-    if (this._imgCache.has(src))
-      return Promise.resolve(this._imgCache.get(src)!);
+    if (this._imgCache.has(src)) return Promise.resolve(this._imgCache.get(src)!);
     return new Promise((res, rej) => {
       const img = new Image();
-      img.crossOrigin = "anonymous";
+      img.crossOrigin = 'anonymous';
       img.onload = () => {
         this._imgCache.set(src, img);
         res(img);
@@ -387,10 +340,7 @@ class Watermark {
     this.stopMonitor();
     this.observer = new MutationObserver((ms) => {
       let reload = ms.some(
-        (m) =>
-          (m.type === "childList" &&
-            Array.from(m.removedNodes).includes(this.watermarkDom!)) ||
-          m.target === this.watermarkDom
+        (m) => (m.type === 'childList' && Array.from(m.removedNodes).includes(this.watermarkDom!)) || m.target === this.watermarkDom,
       );
       if (reload) this.render();
     });
@@ -416,33 +366,22 @@ class Watermark {
 
   private _updateOptions(opts: Partial<WatermarkOptions>) {
     Object.assign(this.options, opts);
-    if (opts.gap !== undefined)
-      this.options.gap = Array.isArray(opts.gap)
-        ? opts.gap
-        : [opts.gap, opts.gap];
-    if (opts.offset !== undefined)
-      this.options.offset = Array.isArray(opts.offset)
-        ? opts.offset
-        : [opts.offset, opts.offset];
+    if (opts.gap !== undefined) this.options.gap = Array.isArray(opts.gap) ? opts.gap : [opts.gap, opts.gap];
+    if (opts.offset !== undefined) this.options.offset = Array.isArray(opts.offset) ? opts.offset : [opts.offset, opts.offset];
   }
 
   private _resolveContainer(el?: string | HTMLElement): HTMLElement {
-    const target = typeof el === "string" ? document.querySelector(el) : el;
+    const target = typeof el === 'string' ? document.querySelector(el) : el;
     return (target || document.body || document.documentElement) as HTMLElement;
   }
 
   /** 强制容器成为定位基准 */
   private _ensureContainerPosition() {
-    if (
-      !this.container ||
-      this.container === document.body ||
-      this.container === document.documentElement
-    )
-      return;
+    if (!this.container || this.container === document.body || this.container === document.documentElement) return;
     const style = window.getComputedStyle(this.container);
     // 如果是 static，为了覆盖 el，必须改为 relative 或使用 contain
-    if (style.position === "static") {
-      this.container.style.position = "relative";
+    if (style.position === 'static') {
+      this.container.style.position = 'relative';
     }
   }
 }
@@ -452,10 +391,7 @@ interface MeasuredBase {
   _renderWidth: number;
   _renderHeight: number;
 }
-type MeasuredNode =
-  | (WatermarkText & MeasuredBase & { _font?: string; _color?: string })
-  | (WatermarkImage & MeasuredBase)
-  | MeasuredGroup;
+type MeasuredNode = (WatermarkText & MeasuredBase & { _font?: string; _color?: string }) | (WatermarkImage & MeasuredBase) | MeasuredGroup;
 
 interface MeasuredGroup extends WatermarkGroup, MeasuredBase {
   items: MeasuredNode[];

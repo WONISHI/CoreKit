@@ -38,6 +38,9 @@ importers:
       lint-staged:
         specifier: ^16.2.7
         version: 16.2.7
+      prettier:
+        specifier: ^3.7.4
+        version: 3.7.4
       rollup:
         specifier: 3.29.4
         version: 3.29.4
@@ -1122,6 +1125,11 @@ packages:
   prettier@2.8.8:
     resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
     engines: {node: '>=10.13.0'}
+    hasBin: true
+
+  prettier@3.7.4:
+    resolution: {integrity: sha512-v6UNi1+3hSlVvv8fSaoUbggEM5VErKmmpGA7Pl3HF8V6uKY7rvClBOJlH6yNwQtfTueNkGVpOv/mtWL9L4bgRA==}
+    engines: {node: '>=14'}
     hasBin: true
 
   punycode@2.3.1:
@@ -2530,6 +2538,8 @@ snapshots:
   prelude-ls@1.2.1: {}
 
   prettier@2.8.8: {}
+
+  prettier@3.7.4: {}
 
   punycode@2.3.1: {}
 
