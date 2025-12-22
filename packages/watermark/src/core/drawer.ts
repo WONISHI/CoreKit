@@ -9,9 +9,21 @@ export class CanvasDrawer {
 
     const contentW = layoutTree._renderWidth;
     const contentH = layoutTree._renderHeight;
+    console.log(contentW, contentH);
     // 弧度 = 角度 × (π / 180)
     const angle = ((rotate || -20) * Math.PI) / 180;
 
+    /*
+     * 内部的矩形：
+     * 是你旋转了 angle 度的水印内容。
+     * 边长 w (contentW)
+     * 边长 h (contentH)
+     * 外部的框：
+     * 是我们需要计算的画布 canvasW 和 canvasH。
+     * 三角函数投影：当你旋转一个矩形时，它的每一条边都会在 X 轴和 Y 轴上产生一个投影。
+     * 新的总宽度 (Width) = 宽边的水平投影 ($w \times \cos\theta$) + 高边的水平投影 ($h \times \sin\theta$)
+     * 新的总高度 (Height) = 宽边的垂直投影 ($w \times \sin\theta$) + 高边的垂直投影 ($h \times \cos\theta$)
+     */
     const canvasW = Math.abs(Math.cos(angle) * contentW) + Math.abs(Math.sin(angle) * contentH) + (layout === 'repeat' ? gx : 0);
     const canvasH = Math.abs(Math.sin(angle) * contentW) + Math.abs(Math.cos(angle) * contentH) + (layout === 'repeat' ? gy : 0);
 
