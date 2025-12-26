@@ -1,5 +1,11 @@
 # @purekit/watermark
 
+## 2.0.0
+
+### Major Changes
+
+- feat: 新增图片支持功能支持更多调用方式
+
 ## 1.1.1
 
 ### Patch Changes
