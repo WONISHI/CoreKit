@@ -75,8 +75,6 @@ class Watermark {
     // 注意：如果 apply 里已经把 array 转成了 object，LayoutEngine.normalize 会直接透传 object
     const rootContent = LayoutEngine.normalize(this.options.content || '');
 
-    console.log(rootContent);
-
     await LayoutEngine.preload(rootContent);
     const tempCtx = document.createElement('canvas').getContext('2d')!;
     const layoutTree = LayoutEngine.measure(tempCtx, rootContent, this.options, ratio);

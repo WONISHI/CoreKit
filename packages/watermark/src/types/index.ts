@@ -1,5 +1,6 @@
 export type LayoutMode = 'repeat' | 'lt' | 'rt' | 'lb' | 'rb' | 'center';
 export type ContentLayoutMode = 'row' | 'column';
+export type WatermarkImageType = string | Blob | File;
 
 export interface BaseContent {
   rotate?: number;
@@ -16,7 +17,7 @@ export interface WatermarkText extends BaseContent {
 
 export interface WatermarkImage extends BaseContent {
   type: 'image';
-  image: string;
+  image: WatermarkImageType;
   width?: number;
   height?: number;
 }
