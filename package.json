@@ -9,7 +9,10 @@
     "build": "turbo run build",
     "build-window:64": ".\\node_modules\\turbo-windows-64\\bin\\turbo.exe run build",
     "prepare": "husky",
-    "commit": "cz"
+    "commit": "cz",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "keywords": [
     "watermark",
@@ -47,5 +50,8 @@
   },
   "volta": {
     "node": "20.19.6"
+  },
+  "dependencies": {
+    "vitepress": "^1.6.4"
   }
 }

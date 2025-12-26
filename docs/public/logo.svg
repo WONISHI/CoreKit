@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="base_grad" x1="50" y1="0" x2="50" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+
+    <linearGradient id="lens_grad" x1="130" y1="40" x2="70" y2="140" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.9" />
+    </linearGradient>
+
+    <linearGradient id="overlay_mix" x1="0" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
+       <stop offset="0%" stop-color="#a5f3fc" />
+       <stop offset="100%" stop-color="#67e8f9" />
+    </linearGradient>
+  </defs>
+
+  <rect x="50" y="40" width="45" height="120" rx="22.5" fill="url(#base_grad)" />
+
+  <path d="M95 40
+           h 25
+           a 40 40 0 0 1 40 40
+           a 40 40 0 0 1 -40 40
+           h -25
+           v -25
+           h 25
+           a 15 15 0 0 0 15 -15
+           a 15 15 0 0 0 -15 -15
+           h -25
+           Z"
+        fill="url(#lens_grad)" />
+
+  <path d="M 60 40
+           L 95 40
+           v 45
+           a 22.5 22.5 0 0 1 -45 0
+           L 50 50
+           A 10 10 0 0 1 60 40
+           Z"
+        fill="url(#overlay_mix)"
+        style="mix-blend-mode: screen;" />
+</svg>

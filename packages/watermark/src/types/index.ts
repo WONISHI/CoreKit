@@ -40,6 +40,7 @@ export interface WatermarkOptions {
   id?: string;
   el?: string | HTMLElement;
   content?: string | string[] | WatermarkContent;
+  text?: string;
   fontSize?: number;
   fontWeight?: string | number;
   fontFamily?: string;

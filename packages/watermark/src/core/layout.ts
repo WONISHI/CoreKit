@@ -16,31 +16,39 @@ export class LayoutEngine {
    * @param content 内容节点
    * @param inheritedGap 从父级继承下来的 gap (专门用于给自动拆分的文本组使用)
    */
-  static normalize(content: string | string[] | WatermarkContent, inheritedGap: number = 0): WatermarkContent {
+  static normalize(content: string | string[] | WatermarkContent | undefined, inheritedGap: number = 0): WatermarkContent {
+    // 1. 空值处理
+    if (!content) {
+      return { type: 'text', text: '' };
+    }
+
+    // 2. 数组处理 (options.content 为数组的情况)
     if (Array.isArray(content)) {
       return {
         type: 'group',
         layout: 'column',
-        gap: inheritedGap, // 数组简写也复用 inheritedGap
+        gap: inheritedGap,
         items: content.map((item) => this.normalize(item, inheritedGap)),
       };
     }
+
+    // 3. 字符串处理 (核心：包含 text 字段传进来的情况)
     if (typeof content === 'string') {
       return this._normalizeText(content, {}, inheritedGap);
     }
-    // 🔥 关键点1：将 inheritedGap 传给 _normalizeText
+
+    // 4. 对象处理
     if (content.type === 'text') {
+      // 这里的 content.text 也是字符串，同样需要检查是否含有换行符
       return this._normalizeText(content.text, content, inheritedGap);
     } else if (content.type === 'group') {
-      // 🔥 关键点2：获取当前这一层定义的 gap
-      // 如果当前层没有 gap，是否继续沿用 inheritedGap？通常如果有明确定义则用定义的，否则为 0 或继承
-      // 这里逻辑：提取当前 group 的 gap，准备传给下一级
       const currentLevelGap = this._resolveGap(content.gap);
-
       return {
         ...content,
-        items: content.items.map((item) => this.normalize(item, currentLevelGap)),
+        items: (content.items || []).map((item) => this.normalize(item, currentLevelGap)),
       };
+    } else if (content.type === 'image') {
+      return content;
     }
 
     return content;
@@ -51,27 +59,26 @@ export class LayoutEngine {
    * 🚀 核心修改：增强正则，支持 <br>, <br/>, <br />, <BR>
    */
   private static _normalizeText(text: string, style: Partial<WatermarkText>, parentGap: number): WatermarkContent {
-    // 统一处理换行符
-    const rawText = text.replace(/<br\s*\/?>/gi, '\n');
+    // 统一处理换行符: 将 <br>, <br/>, <br />, \r\n 等统一转为 \n
+    const rawText = String(text)
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/\r\n/g, '\n');
 
-    // 如果没有换行，返回普通文本，递归结束
+    // Case A: 没有换行符，直接返回文本节点
     if (!rawText.includes('\n')) {
-      return { type: 'text', text: rawText, ...style } as WatermarkText;
+      return { type: 'text', ...style, text: rawText } as WatermarkText;
     }
 
-    console.log(text, style, rawText);
-
-    // 🚀 这里的逻辑就是你想要的结构转换！
+    // Case B: 有换行符，拆分为 Group
     const lines = rawText.split('\n');
 
-    console.log(lines);
     return {
       type: 'group',
-      layout: 'column',
-      gap: parentGap,
+      layout: 'column', // 垂直排列
+      gap: parentGap, // 沿用父级的 gap
       items: lines.map((line) => ({
         type: 'text',
-        ...style,
+        ...style, // 继承原有样式 (color, font 等)
         text: line,
       })),
     } as WatermarkGroup;
