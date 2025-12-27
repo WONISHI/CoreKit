@@ -11,10 +11,10 @@ hero:
     alt: 背景图片
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: '@purekit/watermark'
+      link: /packages/watermark/安装.md
     - theme: alt
-      text: API Examples
+      text: '@purekit/scroll-observer'
       link: /api-examples
 
 features:
