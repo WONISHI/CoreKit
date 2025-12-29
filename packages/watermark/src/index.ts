@@ -179,3 +179,5 @@ class Watermark {
 }
 
 export default new Watermark();
+
+export * from '@/types';
