@@ -1,5 +1,11 @@
 # @purekit/rollup-config
 
+## 1.2.0
+
+### Minor Changes
+
+- feat: 调整打包不生成注释
+
 ## 1.1.1
 
 ### Patch Changes

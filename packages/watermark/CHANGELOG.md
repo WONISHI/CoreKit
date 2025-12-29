@@ -1,5 +1,11 @@
 # @purekit/watermark
 
+## 2.1.0
+
+### Minor Changes
+
+- feat: 调整打包不生成注释
+
 ## 2.0.0
 
 ### Major Changes

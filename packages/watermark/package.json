@@ -1,13 +1,14 @@
 {
   "name": "@purekit/watermark",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "rollup -c rollup.config.mjs",
-    "dev": "rollup -c rollup.config.mjs -w"
+    "dev": "rollup -c rollup.config.mjs -w",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "watermark",
