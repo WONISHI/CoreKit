@@ -1,5 +1,11 @@
 # @purekit/rollup-config
 
+## 1.2.1
+
+### Patch Changes
+
+- feat: 调整别名打包问题
+
 ## 1.2.0
 
 ### Minor Changes

@@ -6,26 +6,22 @@ import dts from 'rollup-plugin-dts';
 import alias from '@rollup/plugin-alias';
 import path from 'path';
 
-/**
- * 创建 Rollup 配置
- * @param {Object} options 自定义选项
- * @param {string} options.input 入口文件，默认为 "src/index.ts"
- */
 export function createConfig(options = {}) {
-  const input = options.input || 'src/index.ts';
-  const dist = 'dist';
-
+  const input = options.input || "./src/index.ts";
+  const dist = "dist";
   const projectRoot = process.cwd();
+  const aliasPlugin = alias({
+    entries: [
+      {
+        find: "@",
+        replacement: path.resolve(projectRoot, "src"),
+      },
+    ],
+  });
 
   const defaultOutput = [
-    {
-      file: `${dist}/index.js`,
-      format: 'cjs',
-    },
-    {
-      file: `${dist}/index.mjs`,
-      format: 'es',
-    },
+    { file: `${dist}/index.js`, format: "cjs" },
+    { file: `${dist}/index.mjs`, format: "es" },
   ];
 
   let finalOutput = options.output || defaultOutput;
@@ -45,14 +41,7 @@ export function createConfig(options = {}) {
     output: finalOutput,
     external: (id) => /node_modules/.test(id),
     plugins: [
-      alias({
-        entries: [
-          {
-            find: '@',
-            replacement: path.resolve(projectRoot, 'src'),
-          },
-        ],
-      }),
+      aliasPlugin,
       resolve(),
       commonjs(),
       typescript({
@@ -61,21 +50,25 @@ export function createConfig(options = {}) {
       }),
       isMinify
         ? terser({
-            format: { comments: false },
-            compress: {
-              drop_console: false,
-              drop_debugger: true,
-              pure_funcs: ['console.log', 'console.info', 'console.debug'],
-            },
-          })
+          format: { comments: false },
+          compress: {
+            drop_console: false,
+            drop_debugger: true,
+            pure_funcs: ["console.log", "console.info", "console.debug"],
+          },
+        })
         : null,
     ],
   };
 
+  // DTS 配置
   const dtsConfig = {
     input,
-    output: [{ file: `${dist}/index.d.ts`, format: 'es' }],
-    plugins: [dts()],
+    output: [{ file: `${dist}/index.d.ts`, format: "es" }],
+    plugins: [
+      aliasPlugin,
+      dts()
+    ],
   };
 
   return [jsConfig, dtsConfig];

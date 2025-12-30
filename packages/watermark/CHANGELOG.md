@@ -1,5 +1,11 @@
 # @purekit/watermark
 
+## 2.1.1
+
+### Patch Changes
+
+- feat: 调整别名打包问题
+
 ## 2.1.0
 
 ### Minor Changes
