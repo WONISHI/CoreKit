@@ -2,6 +2,9 @@
 
 A lightweight, high-performance frontend watermark SDK supporting complex text and image layouts. Features include tamper protection (via MutationObserver), multi-line text, image watermarks, and a flexible Flexbox-like layout strategy.
 
+## Translations
+- [中文文档](https://github.com/WONISHI/purekit/blob/master/packages/watermark/README_zh.md)
+
 ## 📦 Installation
 
 ### npm
